@@ -1,30 +1,72 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from '@/components/HelloWorld.vue'
+import { ref } from 'vue';
+import HelloWorld from '@/components/HelloWorld.vue';
+// import { useCounterStore } from '@/stores/counter';
+import { useBankAccountStore } from '@/stores/bankAccount';
+
+// const store = useCounterStore();
+const store = useBankAccountStore();
+
+store.$onAction(({ store, after }) => {
+  after((result) => {
+    if (result) {
+      store.processTransaction(result);
+    }
+  });
+});
+
+const payAmount = ref(0);
+
+const submitPayment = () => {
+  if (payAmount.value) {
+    store.pay(payAmount.value);
+    payAmount.value = 0;
+  }
+};
 </script>
 
 <template>
   <header>
-    <img
-      alt="Vue logo"
-      class="logo"
-      src="@/assets/logo.svg"
-      width="125"
-      height="125"
-    />
-
     <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+      <HelloWorld msg="Learn Pinia" />
 
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
+      <!-- Counter Example -->
+      <!--
+      <button @click="store.increment()">
+        {{ store.counter }} * 2 {{ store.doubleCount }}
+      </button>
+      <button @click="store.$reset()">RESET</button>
+      -->
+
+      <button @click="store.reconcile()">Reconcile</button>
+
+      <h3>Balance: {{ store.runningBalance }}</h3>
+      <h3>Pending Amount: {{ store.pendingAmount }}</h3>
+
+      <button @click="store.charge(5)">Buy Coffee $5</button>
+
+      <div>
+        Payment Amount: <input type="number" v-model="payAmount" />
+        <button @click="submitPayment">Pay</button>
+      </div>
+
+      <h3>Pending Transactions:</h3>
+      <ul>
+        <li v-for="item in store.pendingTransactions" :key="item.id">
+          ${{ item.amount }}
+        </li>
+      </ul>
+
+      <h3>Processed Transactions:</h3>
+      <ul>
+        <li v-for="item in store.processedTransactions" :key="item.id">
+          ${{ item.amount }}
+        </li>
+      </ul>
     </div>
   </header>
-
-  <RouterView />
 </template>
+
 <style>
 @import '@/assets/base.css';
 
